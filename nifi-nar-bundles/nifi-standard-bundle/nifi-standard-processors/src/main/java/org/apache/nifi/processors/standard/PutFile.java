@@ -41,9 +41,7 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.util.StopWatch;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipalLookupService;
@@ -238,9 +236,7 @@ public class PutFile extends AbstractProcessor {
             if (Files.exists(finalCopyFile)) {
                 switch (conflictResponse) {
                     case REPLACE_RESOLUTION:
-                        Files.delete(finalCopyFile);
-                        logger.info("Deleted {} as configured in order to replace with the contents of {}", new Object[]{finalCopyFile, flowFile});
-                        break;
+                        logger.info("Attempt to atomically replace {} to replace with the contents of {}, but will delete and replace if not supported", new Object[]{finalCopyFile, flowFile});                         break;
                     case IGNORE_RESOLUTION:
                         session.transfer(flowFile, REL_SUCCESS);
                         logger.info("Transferring {} to success because file with same name already exists", new Object[]{flowFile});
@@ -302,10 +298,23 @@ public class PutFile extends AbstractProcessor {
             }
 
             boolean renamed = false;
+            boolean atomicOperationSupported = true;
             for (int i = 0; i < 10; i++) { // try rename up to 10 times.
-                if (dotCopyFile.toFile().renameTo(finalCopyFile.toFile())) {
-                    renamed = true;
-                    break;// rename was successful
+                if(conflictResponse.equals(REPLACE_RESOLUTION) && atomicOperationSupported) {
+                    try {
+                        Files.move(dotCopyFile, finalCopyFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                        renamed = true;
+                        break;
+                    } catch(AtomicMoveNotSupportedException e) {
+                        logger.info("Could not atomically move file, deleting original file {} and attempting rename {}", new Object[]{finalCopyFile, dotCopyFile});
+                        atomicOperationSupported = false;
+                        Files.delete(finalCopyFile);
+                    }
+                } else {
+                   if (dotCopyFile.toFile().renameTo(finalCopyFile.toFile())) {
+                       renamed = true;
+                       break;   // rename was successful
+                   } 
                 }
                 Thread.sleep(100L);// try waiting a few ms to let whatever might cause rename failure to resolve
             }
