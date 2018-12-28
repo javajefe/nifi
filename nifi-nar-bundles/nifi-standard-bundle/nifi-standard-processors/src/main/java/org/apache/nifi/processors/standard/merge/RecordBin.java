@@ -198,22 +198,9 @@ public class RecordBin {
             }
 
             int maxRecords;
-            final Optional<String> recordCountAttribute = thresholds.getRecordCountAttribute();
-            if (recordCountAttribute.isPresent()) {
-                final Optional<String> recordCountValue = flowFiles.stream()
-                    .filter(ff -> ff.getAttribute(recordCountAttribute.get()) != null)
-                    .map(ff -> ff.getAttribute(recordCountAttribute.get()))
-                    .findFirst();
-
-                if (!recordCountValue.isPresent()) {
-                    return false;
-                }
-
-                try {
-                    maxRecords = Integer.parseInt(recordCountValue.get());
-                } catch (final NumberFormatException e) {
-                    maxRecords = 1;
-                }
+            final Optional<String> fragmentCountAttribute = thresholds.getFragmentCountAttribute();
+            if (fragmentCountAttribute.isPresent()) {
+                maxRecords = Integer.MAX_VALUE;
             } else {
                 maxRecords = thresholds.getMaxRecords();
             }
@@ -240,19 +227,15 @@ public class RecordBin {
             }
 
             int requiredRecordCount;
-            final Optional<String> recordCountAttribute = thresholds.getRecordCountAttribute();
-            if (recordCountAttribute.isPresent()) {
-                final String recordCountValue = flowFiles.get(0).getAttribute(recordCountAttribute.get());
-                try {
-                    requiredRecordCount = Integer.parseInt(recordCountValue);
-                } catch (final NumberFormatException e) {
-                    requiredRecordCount = 1;
-                }
+            final Optional<String> fragmentCountAttribute = thresholds.getFragmentCountAttribute();
+            if (fragmentCountAttribute.isPresent()) {
+                int fragmentCountValue = Integer.parseInt(flowFiles.get(0).getAttribute(fragmentCountAttribute.get()));
+                return (flowFiles.size() >= fragmentCountValue);
             } else {
                 requiredRecordCount = thresholds.getMinRecords();
+                return (recordCount >= requiredRecordCount && out.getBytesWritten() >= thresholds.getMinBytes());
             }
 
-            return (recordCount >= requiredRecordCount && out.getBytesWritten() >= thresholds.getMinBytes());
         } finally {
             readLock.unlock();
         }
@@ -331,7 +314,7 @@ public class RecordBin {
             }
 
             // If using defragment mode, and we don't have enough FlowFiles, then we need to fail this bin.
-            final Optional<String> countAttr = thresholds.getRecordCountAttribute();
+            final Optional<String> countAttr = thresholds.getFragmentCountAttribute();
             if (countAttr.isPresent()) {
                 // Ensure that at least one FlowFile has a fragment.count attribute and that they all have the same value, if they have a value.
                 Integer expectedBinCount = null;
