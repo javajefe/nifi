@@ -233,11 +233,16 @@ public class MergeRecord extends AbstractSessionFactoryProcessor {
         properties.add(RECORD_READER);
         properties.add(RECORD_WRITER);
         properties.add(MERGE_STRATEGY);
+        // TODO Переместить в стратегию
         properties.add(CORRELATION_ATTRIBUTE_NAME);
         properties.add(AttributeStrategyUtil.ATTRIBUTE_STRATEGY);
+        // TODO Переместить в стратегию
         properties.add(MIN_RECORDS);
+        // TODO Переместить в стратегию
         properties.add(MAX_RECORDS);
+        // TODO Переместить в стратегию
         properties.add(MIN_SIZE);
+        // TODO Переместить в стратегию
         properties.add(MAX_SIZE);
         properties.add(MAX_BIN_AGE);
         properties.add(MAX_BIN_COUNT);
@@ -268,6 +273,7 @@ public class MergeRecord extends AbstractSessionFactoryProcessor {
     protected Collection<ValidationResult> customValidate(final ValidationContext validationContext) {
         final List<ValidationResult> results = new ArrayList<>();
 
+        // TODO Переместить в стратегию
         final Integer minRecords = validationContext.getProperty(MIN_RECORDS).asInteger();
         final Integer maxRecords = validationContext.getProperty(MAX_RECORDS).asInteger();
         if (minRecords != null && maxRecords != null && maxRecords < minRecords) {
@@ -279,6 +285,7 @@ public class MergeRecord extends AbstractSessionFactoryProcessor {
                 .build());
         }
 
+        // TODO Переместить в стратегию
         final Double minSize = validationContext.getProperty(MIN_SIZE).asDataSize(DataUnit.B);
         final Double maxSize = validationContext.getProperty(MAX_SIZE).asDataSize(DataUnit.B);
         if (minSize != null && maxSize != null && maxSize < minSize) {
@@ -312,6 +319,8 @@ public class MergeRecord extends AbstractSessionFactoryProcessor {
             getLogger().debug("Pulled {} FlowFiles from queue: {}", new Object[] {ids.size(), ids});
         }
 
+
+        // TODO Переместить в стратегию
         final String mergeStrategy = context.getProperty(MERGE_STRATEGY).getValue();
         final boolean block;
         if (MERGE_STRATEGY_DEFRAGMENT.equals(mergeStrategy)) {
@@ -376,6 +385,7 @@ public class MergeRecord extends AbstractSessionFactoryProcessor {
     }
 
 
+    // TODO Переместить в стратегию
     protected String getGroupId(final ProcessContext context, final FlowFile flowFile, final RecordSchema schema, final ProcessSession session) {
         final String mergeStrategy = context.getProperty(MERGE_STRATEGY).getValue();
         if (MERGE_STRATEGY_DEFRAGMENT.equals(mergeStrategy)) {

@@ -102,6 +102,7 @@ public class RecordBin {
         }
 
         final boolean locked;
+        // TODO Переместить в стратегию
         if (block) {
             writeLock.lock();
             locked = true;
@@ -109,6 +110,7 @@ public class RecordBin {
             locked = writeLock.tryLock();
         }
 
+        // TODO Переместить в стратегию ???
         if (!locked) {
             logger.debug("RecordBin.offer for id={} returning false because failed to get lock for {}", new Object[] {flowFile.getId(), this});
             return false;
@@ -124,6 +126,7 @@ public class RecordBin {
 
             logger.debug("Migrating id={} to {}", new Object[] {flowFile.getId(), this});
 
+            // TODO Переместить в стратегию
             Record record;
             while ((record = recordReader.nextRecord()) != null) {
                 if (recordWriter == null) {
@@ -197,6 +200,7 @@ public class RecordBin {
                 return false;
             }
 
+            // TODO Переместить в стратегию
             int maxRecords;
             final Optional<String> fragmentCountAttribute = thresholds.getFragmentCountAttribute();
             if (fragmentCountAttribute.isPresent()) {
@@ -219,6 +223,7 @@ public class RecordBin {
         }
     }
 
+    // TODO Переместить в стратегию
     public boolean isFullEnough() {
         readLock.lock();
         try {
@@ -304,6 +309,7 @@ public class RecordBin {
             complete = true;
             logger.debug("Marked {} as complete because complete() was called", new Object[] {this});
 
+            // TODO Переместить в стратегию
             final WriteResult writeResult = recordWriter.finishRecordSet();
             recordWriter.close();
             logger.debug("Closed Record Writer using session {} for {}", new Object[] {session, this});
@@ -313,6 +319,7 @@ public class RecordBin {
                 return;
             }
 
+            // TODO Переместить в стратегию
             // If using defragment mode, and we don't have enough FlowFiles, then we need to fail this bin.
             final Optional<String> countAttr = thresholds.getFragmentCountAttribute();
             if (countAttr.isPresent()) {

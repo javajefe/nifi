@@ -183,6 +183,7 @@ public class RecordBinManager {
     }
 
 
+    // TODO Переместить в стратегию
     private RecordBinThresholds createThresholds() {
         final int minRecords = context.getProperty(MergeRecord.MIN_RECORDS).asInteger();
         final int maxRecords = context.getProperty(MergeRecord.MAX_RECORDS).asInteger();
